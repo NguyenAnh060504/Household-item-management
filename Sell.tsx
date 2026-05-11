@@ -1,8 +1,8 @@
 import React, { useState, useRef, ChangeEvent, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
-import { useAuthStore } from '../store/useAuthStore';
-import { Product } from '../types/database'; // Import Product type if needed, or just define inline
+import { supabase } from './supabase';
+import { useAuthStore } from './useAuthStore';
+import { Product } from './database'; 
 
 // --- Constants ---
 const CATEGORIES = ['Điện tử', 'Thời trang', 'Nhà bếp', 'Sách', 'Khác'];
@@ -131,7 +131,7 @@ const SellPage: React.FC = () => {
       }
 
       // --- 2. Insert Product Data into Supabase Database ---
-      const { data, error: insertError } = await supabase
+      const { data: insertedProduct, error: insertError } = await supabase
         .from('products')
         .insert({
           title,
@@ -150,7 +150,7 @@ const SellPage: React.FC = () => {
 
       // --- Thành công: Redirect và Toast ---
       alert('Đăng bán thành công!'); // Sử dụng alert tạm thời, nên thay bằng toast UI
-      navigate(`/product/${data.id}`);
+      if (insertedProduct) navigate(`/product/${insertedProduct.id}`);
     } catch (err: any) {
       console.error('Lỗi khi đăng bán:', err);
       setError(err.message || 'Đã có lỗi xảy ra khi đăng bán sản phẩm.');
@@ -173,4 +173,116 @@ const SellPage: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-
+    <div className="container mx-auto px-4 py-8 max-w-2xl">
+      <h1 className="text-2xl font-bold mb-6">Đăng tin bán đồ cũ</h1>
+      <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-xl shadow-sm border">
+        {/* Title */}
+        <div>
+          <label className="block text-sm font-medium mb-1">Tiêu đề tin đăng *</label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="w-full border rounded-lg p-2 focus:ring-orange-500"
+            placeholder="Ví dụ: iPhone 13 Pro Max 256GB..."
+          />
+          {formErrors.title && <p className="text-red-500 text-xs mt-1">{formErrors.title}</p>}
+        </div>
+
+        {/* Price */}
+        <div>
+          <label className="block text-sm font-medium mb-1">Giá bán (VNĐ) *</label>
+          <input
+            type="text"
+            value={displayFormattedPrice(price)}
+            onChange={handlePriceChange}
+            className="w-full border rounded-lg p-2"
+            placeholder="Nhập giá bán"
+          />
+          {formErrors.price && <p className="text-red-500 text-xs mt-1">{formErrors.price}</p>}
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          {/* Category */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Danh mục</label>
+            <select 
+              value={category} 
+              onChange={(e) => setCategory(e.target.value)}
+              className="w-full border rounded-lg p-2"
+            >
+              {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+            </select>
+          </div>
+
+          {/* Condition */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Tình trạng</label>
+            <select 
+              value={condition} 
+              onChange={(e) => setCondition(e.target.value as any)}
+              className="w-full border rounded-lg p-2"
+            >
+              {CONDITIONS.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+            </select>
+          </div>
+        </div>
+
+        {/* Images */}
+        <div>
+          <label className="block text-sm font-medium mb-1">Hình ảnh (Tối đa 5) *</label>
+          <div className="flex flex-wrap gap-2">
+            {images.map((img, index) => (
+              <div key={index} className="relative w-20 h-20">
+                <img src={img.url} className="w-full h-full object-cover rounded-lg" alt="" />
+                <button 
+                  type="button"
+                  onClick={() => handleRemoveImage(index)}
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs"
+                >✕</button>
+              </div>
+            ))}
+            {images.length < MAX_IMAGES && (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-20 h-20 border-2 border-dashed rounded-lg flex items-center justify-center text-gray-400 hover:border-orange-500"
+              >
+                +
+              </button>
+            )}
+          </div>
+          <input type="file" ref={fileInputRef} hidden multiple accept="image/*" onChange={handleImageChange} />
+          {formErrors.images && <p className="text-red-500 text-xs mt-1">{formErrors.images}</p>}
+        </div>
+
+        {/* Description */}
+        <div>
+          <label className="block text-sm font-medium mb-1">Mô tả chi tiết</label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={4}
+            className="w-full border rounded-lg p-2"
+            placeholder="Mô tả kỹ về tình trạng, phụ kiện kèm theo..."
+          />
+          <p className="text-right text-xs text-gray-400">
+            {description.length}/{MAX_DESCRIPTION_LENGTH}
+          </p>
+        </div>
+
+        {error && <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm">{error}</div>}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-orange-500 text-white py-3 rounded-lg font-bold hover:bg-orange-600 transition-colors disabled:bg-gray-400"
+        >
+          {loading ? 'Đang xử lý...' : 'ĐĂNG TIN NGAY'}
+        </button>
+      </form>
+    </div>
+  );
+};
+
+export default SellPage;

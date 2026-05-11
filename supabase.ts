@@ -1,7 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Thay thế bằng URL và Key thực tế của bạn trong file .env
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error(
+    'LỖI: Thiếu biến môi trường Supabase. Hãy tạo file .env dựa trên file .env.example'
+  );
+}
+
+// Fallback sang string rỗng nếu thiếu env để tránh crash ứng dụng khi khởi tạo
+export const supabase = createClient(
+  supabaseUrl || 'https://placeholder.supabase.co',
+  supabaseAnonKey || 'placeholder'
+);

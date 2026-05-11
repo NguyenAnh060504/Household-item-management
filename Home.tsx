@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { supabase } from '../lib/supabase';
-import { Product } from '../types/database';
+import { supabase } from './supabase';
+import { Product } from './database';
 import ProductCard from './ProductCard';
 
 const CATEGORIES = ['Tất cả', 'Điện tử', 'Thời trang', 'Nhà bếp', 'Sách', 'Khác'];

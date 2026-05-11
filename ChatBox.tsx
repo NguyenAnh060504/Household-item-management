@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuthStore } from './useAuthStore';
-import { useMessages } from './hooks/useMessages';
+import { useMessages } from './useMessages';
 
 interface ChatBoxProps {
   productId: string;

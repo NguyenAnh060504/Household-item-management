@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../supabase';
-import { useAuthStore } from '../useAuthStore';
-import { Message } from '../database';
+import { supabase } from './supabase';
+import { useAuthStore } from './useAuthStore';
+import { Message } from './database';
 
 export const useMessages = (productId: string, otherUserId: string) => {
   const { user } = useAuthStore();
@@ -10,7 +10,11 @@ export const useMessages = (productId: string, otherUserId: string) => {
 
   // Fetch lịch sử chat
   const fetchMessages = useCallback(async () => {
-    if (!user) return;
+    if (!user || !productId || !otherUserId) {
+      setMessages([]);
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       // Lấy các tin nhắn mà (mình gửi cho họ) HOẶC (họ gửi cho mình) thuộc sản phẩm này
@@ -33,7 +37,9 @@ export const useMessages = (productId: string, otherUserId: string) => {
   useEffect(() => {
     fetchMessages();
 
-    if (!user) return;
+    if (!user || !productId) {
+      return;
+    }
 
     // Subscribe Realtime: Lắng nghe mọi tin nhắn mới của sản phẩm này
     const channel = supabase
@@ -68,12 +74,18 @@ export const useMessages = (productId: string, otherUserId: string) => {
   const sendMessage = async (content: string) => {
     if (!user || !content.trim()) return;
 
-    await supabase.from('messages').insert({
-      product_id: productId,
-      sender_id: user.id,
-      receiver_id: otherUserId,
-      content: content.trim(),
-    });
+    try {
+      const { error: sendError } = await supabase.from('messages').insert({
+        product_id: productId,
+        sender_id: user.id,
+        receiver_id: otherUserId,
+        content: content.trim(),
+      });
+      if (sendError) throw sendError;
+    } catch (err) {
+      console.error('Lỗi khi gửi tin nhắn:', err);
+      throw err; // Ném lỗi để ChatBox xử lý (alert hoặc set lại input)
+    }
   };
 
   return { messages, sendMessage, loading };
