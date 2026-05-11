@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Product } from '../types/database';
+import ProductCard from './ProductCard';
 
 const Home: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -29,6 +30,20 @@ const Home: React.FC = () => {
     }
   };
 
+  // Helper để map condition từ DB sang props của ProductCard
+  const mapCondition = (cond: string): 'new' | 'like_new' | 'good' | 'fair' => {
+    switch (cond) {
+      case 'new':
+        return 'new';
+      case 'used_like_new':
+        return 'like_new';
+      case 'used':
+        return 'good';
+      default:
+        return 'fair';
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[50vh]">
@@ -49,26 +64,23 @@ const Home: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-6 text-gray-800">Tin đăng mới nhất</h1>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+      
+      {/* Responsive Grid: Mobile 2 cột, Desktop 3-4-5 cột tùy màn hình */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-5">
         {products.map((product) => (
-          <div key={product.id} className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
-            <div className="aspect-square relative overflow-hidden bg-gray-100">
-              <img 
-                src={product.images[0] || 'https://via.placeholder.com/300'} 
-                alt={product.title}
-                className="object-cover w-full h-full"
-              />
-            </div>
-            <div className="p-3">
-              <h3 className="text-sm text-gray-700 line-clamp-2 h-10 mb-2 font-medium">
-                {product.title}
-              </h3>
-              <p className="text-red-600 font-bold">
-                {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.price)}
-              </p>
-              <p className="text-xs text-gray-400 mt-2">{new Date(product.created_at).toLocaleDateString('vi-VN')}</p>
-            </div>
-          </div>
+          <ProductCard
+            key={product.id}
+            id={product.id}
+            title={product.title}
+            price={product.price}
+            images={product.images}
+            condition={mapCondition(product.condition)}
+            created_at={product.created_at}
+            seller={{
+              name: product.seller?.name || null,
+              avatar_url: product.seller?.avatar_url || null,
+            }}
+          />
         ))}
       </div>
     </div>
