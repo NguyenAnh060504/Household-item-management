@@ -13,7 +13,7 @@ export interface Product {
   description: string | null;
   category: string;
   images: string[];
-  condition: 'new' | 'used_like_new' | 'used';
+  condition: 'new' | 'used_like_new' | 'used' | 'fair';
   status: 'available' | 'sold';
   seller_id: string;
   created_at: string;
